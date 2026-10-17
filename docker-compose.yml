@@ -1,0 +1,8 @@
+services:
+  cinetelugu:
+    build: .
+    image: cinetelugu:v1
+    container_name: cinetelugu-app
+    ports:
+      - "9091:5000"
+    restart: unless-stopped
