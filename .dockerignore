@@ -2,9 +2,10 @@
 .gitignore
 __pycache__/
 *.pyc
+*.pyo
+*.log
 .env
 .venv/
 venv/
 README.md
 Jenkinsfile
-docker-compose.yml
