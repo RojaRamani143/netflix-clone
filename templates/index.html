@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090912">
+  <meta name="description" content="CineTelugu — Telugu cinema discovery demo built with Flask and Docker.">
+  <title>CineTelugu — Stories Worth Staying For</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <header class="site-header">
+    <a href="#home" class="brand" aria-label="CineTelugu home"><span class="brand-icon">▶</span> CINE<span>TELUGU</span><i>.</i></a>
+    <nav class="desktop-nav" aria-label="Main navigation"><a href="#home" class="active">Home</a><a href="#explore">Explore</a><a href="#trending">Trending</a><a href="#watchlist">My List</a></nav>
+    <div class="header-actions"><button class="icon-button" id="searchFocus" aria-label="Focus search">⌕</button><span class="avatar" title="Demo profile">CT</span><button class="mobile-menu" id="menuButton" aria-label="Toggle menu">☰</button></div>
+  </header>
+  <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation"><a href="#home">Home</a><a href="#explore">Explore</a><a href="#trending">Trending</a><a href="#watchlist">My List</a></nav>
+  <main id="home">
+    <section class="hero" aria-label="Featured movie">
+      <div class="hero-noise"></div><div class="hero-art"><div class="hero-halo"></div><div class="hero-title-art">PUSHPA<span>2</span></div><div class="hero-art-sub">THE RULE</div><div class="hero-art-spark">✦</div></div>
+      <div class="hero-content"><div class="eyebrow"><span class="pulse"></span> THE TELUGU CINEMA EXPERIENCE</div><div class="hero-badge">🔥 #1 TRENDING TODAY</div><h1>Big stories.<br><em>Bigger feelings.</em></h1><p>Blockbusters, butterflies, and everything in between. Your next Telugu movie obsession starts here.</p><div class="hero-meta"><span>★ 8.1</span><span>2024</span><span>Action</span><span class="quality">4K ULTRA HD</span></div><div class="hero-buttons"><button class="btn btn-primary" id="heroDetails">▶ &nbsp;Explore featured</button><button class="btn btn-glass" id="heroList">＋ &nbsp;My List</button></div></div>
+      <div class="hero-bottom"><span>FEATURED · PUSHPA 2: THE RULE</span><span class="hero-dots"><b></b><b></b><b></b></span></div>
+    </section>
+    <section class="content-wrap" id="explore"><div class="welcome"><div><span class="overline">YOUR CINEMA, YOUR VIBE</span><h2>What are we watching <span>tonight?</span> 🍿</h2><p>Explore iconic stories, hidden gems, and all-time favorites.</p></div><div class="movie-count" id="movieCount">12 movies to explore</div></div>
+      <div class="toolbar"><label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search movies, genres, moods..." autocomplete="off" aria-label="Search movies"><kbd>/</kbd></label><div class="filters" id="filters" role="group" aria-label="Filter movies"><button class="chip selected" data-genre="All">All movies</button><button class="chip" data-genre="Action">🔥 Action</button><button class="chip" data-genre="Romance">💗 Romance</button><button class="chip" data-genre="Sci-Fi">🚀 Sci-Fi</button><button class="chip" data-genre="Drama">🎭 Drama</button><button class="chip" data-genre="Fantasy">✨ Fantasy</button><button class="chip" data-genre="Thriller">🕵️ Thriller</button></div></div>
+    </section>
+    <section class="content-wrap section-gap" id="trending"><div class="section-heading"><div><span class="overline">HANDPICKED FOR YOU</span><h2>Trending <span>right now</span> <span class="fire">↗</span></h2></div><span class="section-note">Made for Telugu movie lovers ✨</span></div><div class="movie-grid" id="movieGrid" aria-live="polite"></div><div class="empty-state" id="emptyState" hidden><span>🎬</span><h3>No movies found</h3><p>Try a different search or genre.</p><button class="btn btn-primary" id="resetFilters">Show all movies</button></div></section>
+    <section class="content-wrap section-gap" id="watchlist"><div class="section-heading"><div><span class="overline">YOUR PERSONAL PICKS</span><h2>My <span>watchlist</span> 💜</h2></div><span class="section-note">Saved in this browser</span></div><div class="movie-grid watchlist-grid" id="watchlistGrid"></div><div class="watchlist-empty" id="watchlistEmpty"><span>♡</span><p>Your watchlist is waiting for its first favorite.</p><small>Tap the heart on any movie to save it here.</small></div></section>
+    <section class="content-wrap"><div class="promo"><div><span class="overline">A LITTLE MOVIE MAGIC</span><h2>Every great night<br>starts with a <em>great story.</em></h2><p>Discover your next favorite Telugu movie — all in one beautiful place.</p><a class="btn btn-primary" href="#explore">Explore movies ↗</a></div><div class="promo-emoji" aria-hidden="true">🍿<span>✦</span></div></div></section>
+  </main>
+  <footer><a class="brand" href="#home"><span class="brand-icon">▶</span> CINE<span>TELUGU</span><i>.</i></a><p>A fan-made movie discovery demo for learning Flask, Docker & Jenkins. Not affiliated with Netflix or any streaming service. No copyrighted movies are hosted.</p><small>Made with ♥ for Telugu cinema · DevOps practice project</small></footer>
+  <dialog id="movieDialog" class="movie-dialog" aria-labelledby="dialogTitle"><button id="closeDialog" class="close-dialog" aria-label="Close movie details">✕</button><div id="dialogContent"></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
