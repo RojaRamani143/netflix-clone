@@ -1,53 +1,286 @@
-let movies = [];
-let activeGenre = 'All';
-let query = '';
-const STORAGE_KEY = 'cinetelugu-watchlist-v1';
-const $ = (selector) => document.querySelector(selector);
-const getSaved = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } };
-const saveList = (ids) => localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-const escapeHtml = (text) => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let toastTimer;
-function toast(message) { const el=$('#toast'); el.textContent=message; el.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('visible'),2600); }
-function movieCard(movie, index=0) {
-  const saved = getSaved().includes(movie.id);
-  return `<article class="movie-card" style="--delay:${Math.min(index*45,400)}ms">
-    <button class="poster palette-${escapeHtml(movie.palette)}" data-details="${movie.id}" aria-label="Details for ${escapeHtml(movie.title)}">
-      <span class="poster-glow"></span><span class="poster-emoji">${movie.emoji}</span><span class="poster-letters">${escapeHtml(movie.initial)}</span><span class="poster-label">${escapeHtml(movie.tag)}</span><span class="poster-bottom">A TELUGU CINEMA STORY</span><span class="poster-play">▶</span>
-    </button><div class="card-meta"><span class="rating">★ ${escapeHtml(movie.rating)}</span><span>${movie.year}</span><span class="card-genre">${escapeHtml(movie.genre)}</span></div>
-    <div class="card-title-row"><button class="card-title" data-details="${movie.id}">${escapeHtml(movie.title)}</button><button class="heart ${saved?'saved':''}" data-save="${movie.id}" aria-label="${saved?'Remove from':'Add to'} watchlist: ${escapeHtml(movie.title)}">${saved?'♥':'♡'}</button></div>
-  </article>`;
+const movies = JSON.parse(
+    document.getElementById("movieData").textContent
+);
+
+const searchInput = document.getElementById("searchInput");
+const movieCards = document.querySelectorAll("#movieGrid .movie-card");
+const categoryButtons = document.querySelectorAll(".category");
+const noResults = document.getElementById("noResults");
+
+const movieModal = document.getElementById("movieModal");
+const modalBody = document.getElementById("modalBody");
+const closeModal = document.getElementById("closeModal");
+
+const watchlistGrid = document.getElementById("watchlistGrid");
+const emptyWatchlist = document.getElementById("emptyWatchlist");
+
+let selectedCategory = "All";
+
+let watchlist = [];
+
+try {
+    const saved = JSON.parse(
+        localStorage.getItem("teluguflix-watchlist") || "[]"
+    );
+
+    if (Array.isArray(saved)) {
+        watchlist = saved.filter(id => Number.isInteger(id));
+    }
+} catch (error) {
+    watchlist = [];
 }
-function render() {
-  const filtered=movies.filter(m=>(activeGenre==='All'||m.genre===activeGenre)&&`${m.title} ${m.genre} ${m.description}`.toLowerCase().includes(query));
-  $('#movieGrid').innerHTML=filtered.map(movieCard).join('');
-  $('#emptyState').hidden=filtered.length>0;
-  $('#movieCount').textContent=`${filtered.length} movie${filtered.length!==1?'s':''} to explore`;
-  const saved=getSaved(); const list=movies.filter(m=>saved.includes(m.id));
-  $('#watchlistGrid').innerHTML=list.map(movieCard).join('');
-  $('#watchlistEmpty').hidden=list.length>0;
-  $('#heroList').textContent=saved.includes(1)?'♥  In My List':'＋  My List';
+
+
+// SEARCH AND CATEGORY FILTER
+
+function filterMovies() {
+
+    const search = searchInput.value.toLowerCase().trim();
+
+    let visibleCount = 0;
+
+    movieCards.forEach(card => {
+
+        const title = card.dataset.title;
+        const hero = card.dataset.hero;
+        const genre = card.dataset.genre;
+
+        const matchesSearch =
+            title.includes(search) ||
+            hero.includes(search) ||
+            genre.toLowerCase().includes(search);
+
+        const matchesCategory =
+            selectedCategory === "All" ||
+            genre === selectedCategory;
+
+        if (matchesSearch && matchesCategory) {
+            card.style.display = "";
+            visibleCount++;
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+
+    noResults.hidden = visibleCount !== 0;
 }
-function toggleSaved(id) { const saved=getSaved(); const exists=saved.includes(id); saveList(exists?saved.filter(x=>x!==id):[...saved,id]); render(); toast(exists?'Removed from your watchlist':'Added to your watchlist 💜'); }
-function showDetails(id) {
-  const movie=movies.find(m=>m.id===id); if(!movie)return;
-  const saved=getSaved().includes(id);
-  $('#dialogContent').innerHTML=`<div class="dialog-poster palette-${escapeHtml(movie.palette)}"><span class="dialog-emoji">${movie.emoji}</span><span class="dialog-letters">${escapeHtml(movie.initial)}</span></div><div class="dialog-body"><span class="overline">${escapeHtml(movie.tag)}</span><h2 id="dialogTitle">${escapeHtml(movie.title)}</h2><div class="dialog-meta"><span>★ ${escapeHtml(movie.rating)}</span><span>${movie.year}</span><span>${escapeHtml(movie.duration)}</span><span>${escapeHtml(movie.genre)}</span></div><p>${escapeHtml(movie.description)}</p><div class="dialog-actions"><button class="btn btn-primary" id="demoPlay">▶ &nbsp;Play preview</button><button class="btn btn-glass" data-save="${id}">${saved?'♥ Remove from list':'♡ Add to list'}</button></div><small>Discovery demo only — no full movies or licensed trailers are hosted.</small></div>`;
-  $('#movieDialog').showModal();
-}
-document.addEventListener('click', e=>{
-  const details=e.target.closest('[data-details]'); if(details)showDetails(Number(details.dataset.details));
-  const save=e.target.closest('[data-save]'); if(save){toggleSaved(Number(save.dataset.save));if($('#movieDialog').open)showDetails(Number(save.dataset.save));}
-  if(e.target.closest('#demoPlay'))toast('Preview playback is a demo feature 🎬');
+
+searchInput.addEventListener("input", filterMovies);
+
+
+// CATEGORY BUTTONS
+
+categoryButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        categoryButtons.forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        selectedCategory = button.dataset.category;
+
+        filterMovies();
+
+    });
+
 });
-$('#filters').addEventListener('click',e=>{const btn=e.target.closest('[data-genre]');if(!btn)return;activeGenre=btn.dataset.genre;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('selected',c===btn));render();});
-$('#searchInput').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render();});
-$('#resetFilters').addEventListener('click',()=>{query='';activeGenre='All';$('#searchInput').value='';document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('selected',c.dataset.genre==='All'));render();});
-$('#searchFocus').addEventListener('click',()=>{$('#searchInput').focus();$('#explore').scrollIntoView({behavior:'smooth'});});
-$('#heroDetails').addEventListener('click',()=>showDetails(1));
-$('#heroList').addEventListener('click',()=>toggleSaved(1));
-$('#closeDialog').addEventListener('click',()=>$('#movieDialog').close());
-$('#movieDialog').addEventListener('click',e=>{if(e.target===$('#movieDialog'))$('#movieDialog').close();});
-$('#menuButton').addEventListener('click',()=>$('#mobileNav').classList.toggle('open'));
-$('#mobileNav').addEventListener('click',e=>{if(e.target.closest('a'))$('#mobileNav').classList.remove('open');});
-document.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)&&!$('#movieDialog').open){e.preventDefault();$('#searchInput').focus();}});
-fetch('/api/movies').then(r=>{if(!r.ok)throw new Error('API error');return r.json();}).then(data=>{movies=data;render();}).catch(()=>{$('#movieGrid').innerHTML='<p class="error">Unable to load movies. Check the Flask server.</p>';$('#movieCount').textContent='Unable to load';});
+
+
+// MOVIE DETAILS
+
+function showMovieDetails(id) {
+
+    const movie = movies.find(m => m.id === Number(id));
+
+    if (!movie) return;
+
+    modalBody.replaceChildren();
+
+    const heading = document.createElement("h2");
+    heading.textContent = movie.title;
+
+    const hero = document.createElement("p");
+    hero.textContent = "⭐ Hero: " + movie.hero;
+
+    const genre = document.createElement("p");
+    genre.textContent = "🎭 Genre: " + movie.genre;
+
+    const year = document.createElement("p");
+    year.textContent = "📅 Release Year: " + movie.year;
+
+    const rating = document.createElement("p");
+    rating.textContent = "⭐ Demo Rating: " + movie.rating;
+
+    const description = document.createElement("p");
+    description.textContent = movie.description;
+
+    modalBody.append(
+        heading,
+        hero,
+        genre,
+        year,
+        rating,
+        description
+    );
+
+    movieModal.hidden = false;
+
+}
+
+
+// CLOSE MODAL
+
+closeModal.addEventListener("click", () => {
+    movieModal.hidden = true;
+});
+
+movieModal.addEventListener("click", event => {
+    if (event.target === movieModal) {
+        movieModal.hidden = true;
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        movieModal.hidden = true;
+    }
+});
+
+
+// WATCHLIST
+
+function toggleWatchlist(id) {
+
+    id = Number(id);
+
+    if (watchlist.includes(id)) {
+
+        watchlist = watchlist.filter(movieId => movieId !== id);
+
+    } else {
+
+        watchlist.push(id);
+
+    }
+
+    localStorage.setItem(
+        "teluguflix-watchlist",
+        JSON.stringify(watchlist)
+    );
+
+    renderWatchlist();
+    updateListButtons();
+
+}
+
+
+// UPDATE BUTTONS
+
+function updateListButtons() {
+
+    document.querySelectorAll(".list-btn").forEach(button => {
+
+        const id = Number(button.dataset.id);
+
+        button.textContent = watchlist.includes(id) ? "✓" : "+";
+
+        button.title = watchlist.includes(id)
+            ? "Remove from My List"
+            : "Add to My List";
+
+    });
+
+}
+
+
+// RENDER WATCHLIST
+
+function renderWatchlist() {
+
+    watchlistGrid.replaceChildren();
+
+    const savedMovies = movies.filter(movie =>
+        watchlist.includes(movie.id)
+    );
+
+    emptyWatchlist.hidden = savedMovies.length > 0;
+
+    savedMovies.forEach(movie => {
+
+        const card = document.createElement("div");
+        card.className = "movie-card";
+
+        const poster = document.createElement("div");
+        poster.className = "poster";
+
+        const image = document.createElement("img");
+
+        image.src = "/static/images/" + encodeURIComponent(movie.image);
+        image.alt = movie.title;
+
+        image.onerror = function() {
+            image.style.display = "none";
+            poster.classList.add("missing-poster");
+        };
+
+        const fallback = document.createElement("span");
+        fallback.className = "poster-fallback";
+        fallback.textContent = "🎬 " + movie.title;
+
+        const info = document.createElement("div");
+        info.className = "movie-info";
+
+        const title = document.createElement("h3");
+        title.textContent = movie.title;
+
+        const hero = document.createElement("p");
+        hero.className = "hero-name";
+        hero.textContent = movie.hero;
+
+        const remove = document.createElement("button");
+        remove.className = "category";
+        remove.textContent = "Remove from List";
+
+        remove.addEventListener("click", () => {
+            toggleWatchlist(movie.id);
+        });
+
+        poster.append(image, fallback);
+        info.append(title, hero, remove);
+        card.append(poster, info);
+
+        watchlistGrid.appendChild(card);
+
+    });
+
+}
+
+
+// MOVIE CARD BUTTON EVENTS
+
+document.getElementById("movieGrid").addEventListener("click", event => {
+
+    const playButton = event.target.closest(".play-btn");
+
+    if (playButton) {
+        showMovieDetails(playButton.dataset.id);
+        return;
+    }
+
+    const listButton = event.target.closest(".list-btn");
+
+    if (listButton) {
+        toggleWatchlist(listButton.dataset.id);
+    }
+
+});
+
+
+// INITIALIZE
+
+renderWatchlist();
+updateListButtons();
